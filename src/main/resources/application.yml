@@ -1,21 +1,32 @@
 server:
-  port: ${SERVER_PORT:8081}
+  # Railway injects PORT. Local runs stay on 8081.
+  port: ${PORT:8081}
+  address: 0.0.0.0
+  shutdown: graceful
+  forward-headers-strategy: framework
   servlet:
     session:
       timeout: 30m
       cookie:
         name: FASHION_SESSION
         http-only: true
-        same-site: lax
+        same-site: ${SESSION_COOKIE_SAMESITE:lax}
         secure: ${SESSION_COOKIE_SECURE:false}
 
 spring:
   application:
     name: fashion
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  # Used when DATABASE_URL is not set. Railway Postgres sets PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD.
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/fashion}
-    username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:Arunask@12}
+    url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:fashion}
+    username: ${PGUSER:${DATABASE_USERNAME:postgres}}
+    password: ${PGPASSWORD:${DATABASE_PASSWORD:Arunask@12}}
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 60000
+      initialization-fail-timeout: 60000
   jpa:
     hibernate:
       ddl-auto: validate
